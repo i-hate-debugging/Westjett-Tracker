@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WestJet Flight Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-plane"></i>
+                <h1>WestJet Tracker</h1>
+            </div>
+            <div class="header-actions">
+                <button id="refreshBtn" class="btn btn-secondary">
+                    <i class="fas fa-sync-alt"></i>
+                    <span class="btn-text">Refresh</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Search Section -->
+        <section class="search-section">
+            <div class="search-container">
+                <div class="search-group">
+                    <label for="flightNumber">Flight Number</label>
+                    <input type="text" id="flightNumber" placeholder="e.g., WS123" class="search-input">
+                </div>
+                <div class="search-group">
+                    <label for="origin">Origin</label>
+                    <input type="text" id="origin" placeholder="e.g., YYC" class="search-input">
+                </div>
+                <div class="search-group">
+                    <label for="destination">Destination</label>
+                    <input type="text" id="destination" placeholder="e.g., YYZ" class="search-input">
+                </div>
+                <button id="searchBtn" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                    <span class="btn-text">Search</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Flight Status Display -->
+        <section class="flight-status" id="flightStatus" style="display: none;">
+            <div class="status-header">
+                <h2>Flight Status</h2>
+                <div class="status-indicator" id="statusIndicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Loading...</span>
+                </div>
+            </div>
+            <div class="flight-info">
+                <div class="flight-number">
+                    <h3 id="displayFlightNumber">WS123</h3>
+                    <span class="airline">WestJet</span>
+                </div>
+                <div class="route-info">
+                    <div class="airport">
+                        <div class="airport-code" id="originCode">YYC</div>
+                        <div class="airport-name" id="originName">Calgary International</div>
+                        <div class="time" id="originTime">--:--</div>
+                    </div>
+                    <div class="flight-path">
+                        <div class="path-line"></div>
+                        <div class="plane-icon">
+                            <i class="fas fa-plane"></i>
+                        </div>
+                    </div>
+                    <div class="airport">
+                        <div class="airport-code" id="destinationCode">YYZ</div>
+                        <div class="airport-name" id="destinationName">Toronto Pearson</div>
+                        <div class="time" id="destinationTime">--:--</div>
+                    </div>
+                </div>
+                <div class="flight-details">
+                    <div class="detail-item">
+                        <span class="label">Status:</span>
+                        <span class="value" id="flightStatusText">--</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Departure:</span>
+                        <span class="value" id="departureStatus">--</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Arrival:</span>
+                        <span class="value" id="arrivalStatus">--</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Gate:</span>
+                        <span class="value" id="gateInfo">--</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Flights -->
+        <section class="recent-flights">
+            <h2>Recent Searches</h2>
+            <div class="flights-list" id="recentFlights">
+                <!-- Recent flights will be populated here -->
+            </div>
+        </section>
+
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loadingSpinner" style="display: none;">
+            <div class="spinner"></div>
+            <p>Searching for flights...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p id="errorText">An error occurred while searching for flights.</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
