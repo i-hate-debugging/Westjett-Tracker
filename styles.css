@@ -102,13 +102,9 @@ button:hover {
 }
 
 .plane-icon {
-    width: 24px;
-    height: 24px;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23e91e63"><path d="M22 16.21v-1.895L14 8V4a2 2 0 0 0-1.85-1.995L12 2a2 2 0 0 0-2 2v2.1L2.4 5.9l-.9 2.3 6.5 1.7-4.75 3.5L2 12l.1.5 1.9 1.5-1.9 1.5-.1.5 1.6.2 4.75 3.5-6.5 1.7.9 2.3 7.6-1.9V20a2 2 0 0 0 2 2h.15a2 2 0 0 0 1.85-1.7L22 16.21z"/></svg>');
-    background-size: contain;
-    background-repeat: no-repeat;
-    transform: rotate(45deg);
-    transform-origin: center;
+    /* Custom plane icon styles */
+    background: transparent;
+    border: none;
 }
 
 .leaflet-popup-content {

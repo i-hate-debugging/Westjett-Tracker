@@ -12,10 +12,12 @@ const planeMarkers = {};
 let allFlights = [];
 
 // Custom plane icon
-const planeIcon = L.divIcon({
-    className: 'plane-icon',
+const planeIcon = L.icon({
+    iconUrl: 'airplaneicon.png',
     iconSize: [24, 24],
-    popupAnchor: [0, -12]
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12],
+    className: 'plane-icon'
 });
 
 // Function to fetch flight data from OpenSky Network
@@ -33,55 +35,84 @@ async function fetchFlights() {
     }
 }
 
+// Function to check if a coordinate is within the current map bounds
+function isInViewport(lat, lng) {
+    if (!map) return false;
+    const bounds = map.getBounds();
+    return bounds.contains([lat, lng]);
+}
+
 // Function to update flight markers on the map
 function updateFlights(flights) {
     allFlights = flights;
     const existingIcao24 = new Set();
+    const currentBounds = map.getBounds();
     
+    // First pass: Update existing markers and track which ones are still active
     flights.forEach(flight => {
         const icao24 = flight[0];
-        const callsign = flight[1]?.trim() || 'N/A';
         const [longitude, latitude, altitude] = flight.slice(5, 8);
-        const heading = flight[10] || 0;
-        
         if (!latitude || !longitude) return;
         
         existingIcao24.add(icao24);
         
-        // Create or update marker
-        if (!planeMarkers[icao24]) {
-            planeMarkers[icao24] = L.marker([latitude, longitude], {
-                icon: planeIcon,
-                rotationAngle: heading,
-                rotationOrigin: 'center',
-                icao24: icao24
-            }).addTo(map);
-            
-            // Add popup with flight info
-            planeMarkers[icao24].bindPopup(`
-                <h3>${callsign}</h3>
-                <p><strong>ICAO24:</strong> ${icao24}</p>
-                <p><strong>Altitude:</strong> ${Math.round(altitude * 3.28084)} ft</p>
-                <p><strong>Speed:</strong> ${Math.round(flight[9] * 1.94384)} kt</p>
-                <p><strong>Heading:</strong> ${Math.round(heading)}°</p>
-            `);
-            
-            // Add click event to show flight details
-            planeMarkers[icao24].on('click', () => showFlightDetails(flight));
-        } else {
-            // Update existing marker position and rotation
-            planeMarkers[icao24].setLatLng([latitude, longitude]);
-            planeMarkers[icao24].setRotationAngle(heading);
+        // Only process flights in current viewport or that were previously visible
+        const inViewport = isInViewport(latitude, longitude);
+        
+        if (planeMarkers[icao24]) {
+            if (inViewport) {
+                // Update existing marker
+                planeMarkers[icao24].setLatLng([latitude, longitude]);
+                planeMarkers[icao24].setRotationAngle(flight[10] || 0);
+                if (!map.hasLayer(planeMarkers[icao24])) {
+                    planeMarkers[icao24].addTo(map);
+                }
+            } else if (map.hasLayer(planeMarkers[icao24])) {
+                // Remove from map if out of viewport
+                map.removeLayer(planeMarkers[icao24]);
+            }
+        } else if (inViewport) {
+            // Only create new markers for flights in viewport
+            createFlightMarker(flight);
         }
     });
     
     // Remove markers for flights that are no longer active
     Object.keys(planeMarkers).forEach(icao24 => {
         if (!existingIcao24.has(icao24)) {
-            map.removeLayer(planeMarkers[icao24]);
+            if (map.hasLayer(planeMarkers[icao24])) {
+                map.removeLayer(planeMarkers[icao24]);
+            }
             delete planeMarkers[icao24];
         }
     });
+}
+
+// Function to create a new flight marker
+function createFlightMarker(flight) {
+    const [icao24, callsign, origin_country, time_position, last_contact, 
+           longitude, latitude, altitude, on_ground, velocity, heading] = flight;
+    
+    if (!latitude || !longitude) return null;
+    
+    const marker = L.marker([latitude, longitude], {
+        icon: planeIcon,
+        rotationAngle: heading || 0,
+        rotationOrigin: 'center',
+        icao24: icao24
+    }).addTo(map);
+    
+    marker.bindPopup(`
+        <h3>${callsign?.trim() || 'N/A'}</h3>
+        <p><strong>ICAO24:</strong> ${icao24}</p>
+        <p><strong>Altitude:</strong> ${Math.round(altitude * 3.28084)} ft</p>
+        <p><strong>Speed:</strong> ${Math.round(velocity * 1.94384)} kt</p>
+        <p><strong>Heading:</strong> ${Math.round(heading || 0)}°</p>
+    `);
+    
+    marker.on('click', () => showFlightDetails(flight));
+    planeMarkers[icao24] = marker;
+    return marker;
 }
 
 // Function to show flight details in the sidebar
@@ -140,6 +171,46 @@ document.getElementById('searchInput').addEventListener('keypress', (e) => {
     }
 });
 
-// Fetch flight data every 5 seconds
+// Update flights on map move/zoom
+let updateTimeout;
+function scheduleUpdate() {
+    if (updateTimeout) clearTimeout(updateTimeout);
+    updateTimeout = setTimeout(updateVisibleFlights, 300);
+}
+
+function updateVisibleFlights() {
+    if (!allFlights.length) return;
+    
+    const bounds = map.getBounds();
+    allFlights.forEach(flight => {
+        const icao24 = flight[0];
+        const [longitude, latitude] = flight.slice(5, 7);
+        
+        if (!latitude || !longitude) return;
+        
+        const inViewport = bounds.contains([latitude, longitude]);
+        const marker = planeMarkers[icao24];
+        
+        if (inViewport) {
+            if (marker) {
+                if (!map.hasLayer(marker)) {
+                    marker.addTo(map);
+                }
+            } else {
+                createFlightMarker(flight);
+            }
+        } else if (marker && map.hasLayer(marker)) {
+            map.removeLayer(marker);
+        }
+    });
+}
+
+// Initial fetch
 fetchFlights();
+
+// Update flights every 5 seconds
 setInterval(fetchFlights, 5000);
+
+// Update visible flights when map is moved/zoomed
+map.on('moveend', scheduleUpdate);
+map.on('zoomend', scheduleUpdate);
